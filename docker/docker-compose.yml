@@ -1,0 +1,39 @@
+version: '3.7'
+
+services:
+  dev_mysql:
+    build:
+      context: ./mysql
+    image: '${COMPOSE_PROJECT_NAME}/${REPOSITORY_NAME}_mysql:${IMAGE_TAG}'
+    container_name: '${REPOSITORY_NAME}_mysql'
+    hostname: '${REPOSITORY_NAME}-mysql'
+    restart: always
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    environment:
+      MYSQL_HOST: '${MYSQL_HOST}'
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+    ports:
+      - '3306:3306'
+
+  kudos_server:
+    image: 'dp_kudos/node:latest'
+    depends_on:
+      - "dev_mysql"
+    volumes:
+      - ../src:/app:ro
+    environment:
+      MYSQL_HOST: '${MYSQL_HOST}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+    ports:
+      - 3003:3003
+    command: "node index.js"
+
+volumes:
+  mysql-data: {}
